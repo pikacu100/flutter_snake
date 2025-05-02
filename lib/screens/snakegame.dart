@@ -33,15 +33,23 @@ class _SnakeGameState extends State<SnakeGame> {
   bool isGameOver = false;
   Timer? _gameTimer;
   bool isPaused = false;
+  bool isGameStarted = false;
 
   Timer? _countdownTimer;
   int _countdown = 3;
   bool _showCountdown = false;
 
+  bool _showSettings = false;
+  double volumeLevel = 0.5;
+  bool isEasy = true;
+  bool isMedium = false;
+  bool isHard = false;
+
   @override
   void initState() {
     super.initState();
-    startCountdown();
+    _loadHighScore();
+    _loadSettings();
   }
 
   @override
@@ -59,7 +67,13 @@ class _SnakeGameState extends State<SnakeGame> {
     startCountdown();
   }
 
+  void _loadHighScore() async {
+    final SharedPreferences sharedPreferences = await prefs;
+    highScore = sharedPreferences.getInt('high_score') ?? 0;
+  }
+
   void startCountdown() {
+    isGameStarted = true;
     snake = [Offset((gridSize ~/ 2).toDouble(), (gridSize ~/ 2).toDouble())];
     direction = const Offset(1, 0);
     generateFood();
@@ -174,6 +188,50 @@ class _SnakeGameState extends State<SnakeGame> {
     });
   }
 
+  void _handleSettings() {
+    setState(() {
+      _showSettings = !_showSettings;
+    });
+
+    if (!_showSettings) {
+      _saveSettings();
+    } else {
+      _loadSettings();
+    }
+  }
+
+  void _saveSettings() async {
+    final SharedPreferences sharedPreferences = await prefs;
+    await sharedPreferences.setDouble('volume_level', volumeLevel);
+    await sharedPreferences.setBool('is_easy', isEasy);
+    await sharedPreferences.setBool('is_medium', isMedium);
+    await sharedPreferences.setBool('is_hard', isHard);
+  }
+
+  void _resetSettings() async {
+    final SharedPreferences sharedPreferences = await prefs;
+    await sharedPreferences.setDouble('volume_level', 0.5);
+    await sharedPreferences.setBool('is_easy', true);
+    await sharedPreferences.setBool('is_medium', false);
+    await sharedPreferences.setBool('is_hard', false);
+    setState(() {
+      volumeLevel = 0.5;
+      isEasy = true;
+      isMedium = false;
+      isHard = false;
+    });
+  }
+
+  void _loadSettings() async {
+    final SharedPreferences sharedPreferences = await prefs;
+    setState(() {
+      volumeLevel = sharedPreferences.getDouble('volume_level') ?? 0.5;
+      isEasy = sharedPreferences.getBool('is_easy') ?? true;
+      isMedium = sharedPreferences.getBool('is_medium') ?? false;
+      isHard = sharedPreferences.getBool('is_hard') ?? false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -254,13 +312,13 @@ class _SnakeGameState extends State<SnakeGame> {
                       child: Column(
                         children: [
                           _buildArrowButton(
-                                Icons.arrow_upward,
-                                () => changeDirection(const Offset(0, -1)),
-                              ),
+                            Icons.arrow_upward,
+                            () => changeDirection(const Offset(0, -1)),
+                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                               _buildArrowButton(
+                              _buildArrowButton(
                                 Icons.arrow_back,
                                 () => changeDirection(const Offset(-1, 0)),
                               ),
@@ -328,7 +386,7 @@ class _SnakeGameState extends State<SnakeGame> {
                     ],
                   ),
                 ),
-              if (isGameOver)
+              if (isGameOver || !isGameStarted)
                 SizedBox(
                   width: double.infinity,
                   height: double.infinity,
@@ -347,9 +405,11 @@ class _SnakeGameState extends State<SnakeGame> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            hitWall == true
-                                ? 'GAME OVER\nHIT THE WALL!'
-                                : 'GAME OVER\nATE YOURSELF!',
+                            isGameStarted
+                                ? hitWall == true
+                                    ? 'GAME OVER\nHIT THE WALL!'
+                                    : 'GAME OVER\nATE YOURSELF!'
+                                : 'WELCOME TO SNAKE GAME',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white,
@@ -358,7 +418,7 @@ class _SnakeGameState extends State<SnakeGame> {
                             ),
                           ),
                           SizedBox(height: cellSize),
-                          if (isHighScore)
+                          if (isHighScore || isGameStarted)
                             Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -373,14 +433,15 @@ class _SnakeGameState extends State<SnakeGame> {
                                 SizedBox(height: cellSize),
                               ],
                             ),
-                          Text(
-                            'SCORE: $score',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: cellSize * 1.5,
-                              fontWeight: FontWeight.bold,
+                          if (isGameStarted)
+                            Text(
+                              'SCORE: $score',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: cellSize * 1.5,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
                           if (!isHighScore)
                             Text(
                               'HIGH SCORE: $highScore',
@@ -394,12 +455,27 @@ class _SnakeGameState extends State<SnakeGame> {
                           TextButton(
                             onPressed: startCountdown,
                             child: Text(
-                              'RESTART',
+                              isGameStarted ? 'RESTART' : 'START',
                               style: TextStyle(
-                                  fontSize: cellSize, color: Colors.red),
+                                  fontSize: cellSize,
+                                  color: isGameStarted
+                                      ? Colors.red
+                                      : Colors.indigo),
                             ),
                           ),
                         ],
+                      ),
+                      Positioned(
+                        top: 20,
+                        right: 20,
+                        child: GestureDetector(
+                          onTap: _handleSettings,
+                          child: Icon(
+                            Icons.settings,
+                            color: Colors.white,
+                            size: cellSize * 2,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -415,6 +491,7 @@ class _SnakeGameState extends State<SnakeGame> {
                     ),
                   ),
                 ),
+              if (_showSettings) buildSettings()
             ],
           );
         },
@@ -436,8 +513,168 @@ class _SnakeGameState extends State<SnakeGame> {
         ],
       ),
       child: IconButton(
-        icon: Icon(icon, size: cellSize * 1.5, color: Colors.white,),
+        icon: Icon(
+          icon,
+          size: cellSize * 1.5,
+          color: Colors.white,
+        ),
         onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget buildSettings() {
+    return SizedBox(
+      width: double.infinity,
+      height: double.infinity,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+              ),
+            ),
+          ),
+          Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            padding: EdgeInsets.all(cellSize),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(cellSize),
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'SETTINGS',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: cellSize * 1.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: cellSize),
+                Row(
+                  children: [
+                    Icon(Icons.volume_up, color: Colors.white, size: cellSize),
+                    SizedBox(width: cellSize * 0.5),
+                    Expanded(
+                      child: Slider(
+                        value: volumeLevel,
+                        onChanged: (value) {
+                          setState(() => volumeLevel = value);
+                        },
+                        activeColor: Colors.indigo,
+                        inactiveColor: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: cellSize * 0.5),
+                Row(
+                  children: [
+                    Text(
+                      'Difficulty:',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: cellSize,
+                      ),
+                    ),
+                    SizedBox(width: cellSize),
+                    ToggleButtons(
+                      isSelected: [isEasy, isMedium, isHard],
+                      onPressed: (index) {
+                        setState(() {
+                          isEasy = index == 0;
+                          isMedium = index == 1;
+                          isHard = index == 2;
+                        });
+                      },
+                      borderColor: Colors.white,
+                      selectedBorderColor: Colors.white,
+                      fillColor: Colors.indigo,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(cellSize * 0.5),
+                          child: Text('Easy',
+                              style: TextStyle(
+                                  fontSize: cellSize * 0.8,
+                                  color: Colors.white)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(cellSize * 0.5),
+                          child: Text('Medium',
+                              style: TextStyle(
+                                  fontSize: cellSize * 0.8,
+                                  color: Colors.white)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(cellSize * 0.5),
+                          child: Text('Hard',
+                              style: TextStyle(
+                                  fontSize: cellSize * 0.8,
+                                  color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: cellSize),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                      onPressed: _handleSettings,
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.indigo,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: cellSize * 1.5,
+                          vertical: cellSize * 0.5,
+                        ),
+                      ),
+                      child: Text(
+                        'SAVE & BACK',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: cellSize * 0.75,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _resetSettings,
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.indigo,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: cellSize * 1.5,
+                          vertical: cellSize * 0.5,
+                        ),
+                      ),
+                      child: Text(
+                        'RESET',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: cellSize * 0.75,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
