@@ -244,6 +244,7 @@ class _SnakeGameState extends State<SnakeGame> {
                             cellSize: cellSize,
                             gridSize: gridSize,
                             isGameOver: isGameOver,
+                            direction: direction,
                           ),
                         ),
                       ),
