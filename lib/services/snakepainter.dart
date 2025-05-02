@@ -33,7 +33,7 @@ class GamePainter extends CustomPainter {
     }
 
     final foodPaint = Paint()
-      ..color = Colors.red
+      ..color = const Color(0xFFFF0000) 
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(
@@ -47,7 +47,7 @@ class GamePainter extends CustomPainter {
     );
 
     final snakePaint = Paint()
-      ..color = Colors.green
+      ..color = const Color(0xFF00FF00).withOpacity(0.8) 
       ..style = PaintingStyle.fill;
 
     for (var segment in snake) {

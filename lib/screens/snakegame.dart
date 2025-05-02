@@ -253,36 +253,26 @@ class _SnakeGameState extends State<SnakeGame> {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          IconButton(
-                            icon:
-                                Icon(Icons.arrow_upward, size: cellSize * 1.5),
-                            onPressed: () =>
-                                changeDirection(const Offset(0, -1)),
-                          ),
+                          _buildArrowButton(
+                                Icons.arrow_upward,
+                                () => changeDirection(const Offset(0, -1)),
+                              ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              IconButton(
-                                icon: Icon(Icons.arrow_back,
-                                    size: cellSize * 1.5),
-                                onPressed: () =>
-                                    changeDirection(const Offset(-1, 0)),
+                               _buildArrowButton(
+                                Icons.arrow_back,
+                                () => changeDirection(const Offset(-1, 0)),
                               ),
                               SizedBox(width: cellSize * 2),
-                              IconButton(
-                                icon: Icon(Icons.arrow_forward,
-                                    size: cellSize * 1.5),
-                                onPressed: () =>
-                                    changeDirection(const Offset(1, 0)),
+                              _buildArrowButton(
+                                Icons.arrow_forward,
+                                () => changeDirection(const Offset(1, 0)),
                               ),
                             ],
                           ),
-                          IconButton(
-                            icon: Icon(Icons.arrow_downward,
-                                size: cellSize * 1.5),
-                            onPressed: () =>
-                                changeDirection(const Offset(0, 1)),
-                          ),
+                          _buildArrowButton(Icons.arrow_downward,
+                              () => changeDirection(const Offset(0, 1))),
                         ],
                       ),
                     ),
@@ -320,7 +310,17 @@ class _SnakeGameState extends State<SnakeGame> {
                             onPressed: togglePause,
                             child: Text(
                               'RESUME',
-                              style: TextStyle(fontSize: cellSize),
+                              style: TextStyle(
+                                  fontSize: cellSize, color: Colors.white),
+                            ),
+                          ),
+                          SizedBox(height: cellSize),
+                          TextButton(
+                            onPressed: startCountdown,
+                            child: Text(
+                              'RESTART',
+                              style: TextStyle(
+                                  fontSize: cellSize, color: Colors.red),
                             ),
                           ),
                         ],
@@ -418,6 +418,26 @@ class _SnakeGameState extends State<SnakeGame> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildArrowButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(cellSize * 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, size: cellSize * 1.5, color: Colors.white,),
+        onPressed: onPressed,
       ),
     );
   }
