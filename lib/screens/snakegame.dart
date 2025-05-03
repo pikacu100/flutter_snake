@@ -7,6 +7,13 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_snake/services/snakepainter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+extension OffsetExtension on Offset {
+  Offset normalized() {
+    final length = distance;
+    return length > 0 ? this / length : this;
+  }
+}
+
 class SnakeGame extends StatefulWidget {
   const SnakeGame({super.key});
 
@@ -16,7 +23,6 @@ class SnakeGame extends StatefulWidget {
 
 class _SnakeGameState extends State<SnakeGame> {
   final int gridSize = 20;
-
   int score = 0;
   int highScore = 0;
   bool isHighScore = false;
@@ -67,6 +73,18 @@ class _SnakeGameState extends State<SnakeGame> {
     startCountdown();
   }
 
+  Duration get _gameSpeed {
+    if (isHard) return const Duration(milliseconds: 100);
+    if (isMedium) return const Duration(milliseconds: 150);
+    return const Duration(milliseconds: 200);
+  }
+
+  int get _pointsPerFood {
+    if (isHard) return 3;
+    if (isMedium) return 2;
+    return 1;
+  }
+
   void _loadHighScore() async {
     final SharedPreferences sharedPreferences = await prefs;
     highScore = sharedPreferences.getInt('high_score') ?? 0;
@@ -103,7 +121,8 @@ class _SnakeGameState extends State<SnakeGame> {
   }
 
   void _startGameTimer() {
-    _gameTimer = Timer.periodic(const Duration(milliseconds: 200), (timer) {
+    _gameTimer?.cancel();
+    _gameTimer = Timer.periodic(_gameSpeed, (timer) {
       if (isGameOver || isPaused) return;
       moveSnake();
     });
@@ -117,7 +136,7 @@ class _SnakeGameState extends State<SnakeGame> {
 
   void generateFood() {
     setState(() {
-      score++;
+      score += _pointsPerFood;
     });
     final random = Random();
     food = Offset(
@@ -135,6 +154,14 @@ class _SnakeGameState extends State<SnakeGame> {
 
   void moveSnake() {
     if (isGameOver || isPaused) return;
+
+    if (isHard && Random().nextDouble() < 0.02) {
+      if (direction.dx != 0) {
+        changeDirection(Offset(0, Random().nextBool() ? 1.0 : -1.0));
+      } else if (direction.dy != 0) {
+        changeDirection(Offset(Random().nextBool() ? 1.0 : -1.0, 0));
+      }
+    }
 
     setState(() {
       double newX = snake.first.dx + direction.dx;
@@ -169,6 +196,12 @@ class _SnakeGameState extends State<SnakeGame> {
   }
 
   void _handleDeath({required bool hitWall}) async {
+    if (isHard && hitWall) {
+      setState(() {
+        score = max(0, score - 2);
+      });
+    }
+
     isGameOver = true;
     _gameTimer?.cancel();
 
@@ -195,6 +228,10 @@ class _SnakeGameState extends State<SnakeGame> {
 
     if (!_showSettings) {
       _saveSettings();
+
+      if (isGameStarted && !isGameOver && !isPaused) {
+        restartGame();
+      }
     } else {
       _loadSettings();
     }
@@ -442,12 +479,21 @@ class _SnakeGameState extends State<SnakeGame> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                          if (!isHighScore)
+                          if (!isHighScore && isGameStarted)
                             Text(
                               'HIGH SCORE: $highScore',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: cellSize * 0.75,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          if (isGameStarted)
+                            Text(
+                              'MODE: ${isEasy ? 'EASY' : isMedium ? 'MEDIUM' : 'HARD'}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: cellSize * 0.65,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -624,6 +670,15 @@ class _SnakeGameState extends State<SnakeGame> {
                       ],
                     ),
                   ],
+                ),
+                SizedBox(height: cellSize),
+                Text(
+                  'Current speed: ${_gameSpeed.inMilliseconds}ms\nPoints per food: $_pointsPerFood',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: cellSize * 0.7,
+                  ),
                 ),
                 SizedBox(height: cellSize),
                 Row(
