@@ -409,7 +409,7 @@ class _SnakeGameState extends State<SnakeGame> {
                                 ? hitWall == true
                                     ? 'GAME OVER\nHIT THE WALL!'
                                     : 'GAME OVER\nATE YOURSELF!'
-                                : 'WELCOME TO SNAKE GAME',
+                                : 'WELCOME TO SNAKE GAME 🐍',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white,
@@ -418,7 +418,7 @@ class _SnakeGameState extends State<SnakeGame> {
                             ),
                           ),
                           SizedBox(height: cellSize),
-                          if (isHighScore || isGameStarted)
+                          if (isHighScore && isGameStarted)
                             Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -594,8 +594,10 @@ class _SnakeGameState extends State<SnakeGame> {
                           isHard = index == 2;
                         });
                       },
-                      borderColor: Colors.white,
-                      selectedBorderColor: Colors.white,
+                      borderRadius: BorderRadius.circular(5),
+                      borderColor: Colors.grey.shade900,
+                      selectedBorderColor: Colors.grey.shade200,
+                      borderWidth: 2,
                       fillColor: Colors.indigo,
                       children: [
                         Padding(
