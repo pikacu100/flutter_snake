@@ -623,52 +623,64 @@ class _SnakeGameState extends State<SnakeGame> {
                 SizedBox(height: cellSize * 0.5),
                 Row(
                   children: [
-                    Text(
-                      'Difficulty:',
+                  Text(
+                    'Difficulty:',
+                    style: TextStyle(
+                    color: Colors.white,
+                    fontSize: cellSize * 0.8,
+                    ),
+                  ),
+                  SizedBox(width: cellSize * 0.5),
+                  ToggleButtons(
+                    isSelected: [isEasy, isMedium, isHard],
+                    onPressed: (index) {
+                    setState(() {
+                      isEasy = index == 0;
+                      isMedium = index == 1;
+                      isHard = index == 2;
+                    });
+                    },
+                    borderRadius: BorderRadius.circular(cellSize * 0.3),
+                    borderColor: Colors.grey.shade900,
+                    selectedBorderColor: Colors.grey.shade200,
+                    borderWidth: 2,
+                    fillColor: Colors.indigo,
+                    children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: cellSize * 0.5, vertical: cellSize * 0.3),
+                      child: Text(
+                      'Easy',
                       style: TextStyle(
+                        fontSize: cellSize * 0.7,
                         color: Colors.white,
-                        fontSize: cellSize,
+                      ),
                       ),
                     ),
-                    SizedBox(width: cellSize),
-                    ToggleButtons(
-                      isSelected: [isEasy, isMedium, isHard],
-                      onPressed: (index) {
-                        setState(() {
-                          isEasy = index == 0;
-                          isMedium = index == 1;
-                          isHard = index == 2;
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(5),
-                      borderColor: Colors.grey.shade900,
-                      selectedBorderColor: Colors.grey.shade200,
-                      borderWidth: 2,
-                      fillColor: Colors.indigo,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(cellSize * 0.5),
-                          child: Text('Easy',
-                              style: TextStyle(
-                                  fontSize: cellSize * 0.8,
-                                  color: Colors.white)),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(cellSize * 0.5),
-                          child: Text('Medium',
-                              style: TextStyle(
-                                  fontSize: cellSize * 0.8,
-                                  color: Colors.white)),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(cellSize * 0.5),
-                          child: Text('Hard',
-                              style: TextStyle(
-                                  fontSize: cellSize * 0.8,
-                                  color: Colors.white)),
-                        ),
-                      ],
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: cellSize * 0.5, vertical: cellSize * 0.3),
+                      child: Text(
+                      'Medium',
+                      style: TextStyle(
+                        fontSize: cellSize * 0.7,
+                        color: Colors.white,
+                      ),
+                      ),
                     ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: cellSize * 0.5, vertical: cellSize * 0.3),
+                      child: Text(
+                      'Hard',
+                      style: TextStyle(
+                        fontSize: cellSize * 0.7,
+                        color: Colors.white,
+                      ),
+                      ),
+                    ),
+                    ],
+                  ),
                   ],
                 ),
                 SizedBox(height: cellSize),
